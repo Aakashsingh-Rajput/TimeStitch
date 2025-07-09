@@ -9,14 +9,12 @@ const Footer: React.FC<FooterProps> = ({ memories }) => {
   const [footerContent, setFooterContent] = useState<React.ReactNode>(null)
 
   const quotes = [
-    { text: "Every moment is a fresh beginning.", author: "T.S. Eliot", emoji: "🌅" },
-    { text: "Life is not measured by the breaths we take, but by the moments that take our breath away.", author: "Maya Angelou", emoji: "💫" },
-    { text: "The best things in life are the people we love, the places we've been, and the memories we've made along the way.", author: "Unknown", emoji: "🧩" },
-    { text: "Memories are the key not to the past, but to the future.", author: "Corrie Ten Boom", emoji: "🗝️" },
-    { text: "Photography is a way of feeling, of touching, of loving... it remembers little things, long after you have forgotten everything.", author: "Aaron Siskind", emoji: "📷" },
-    { text: "The only way to make sense out of change is to plunge into it, move with it, and join the dance.", author: "Alan Watts", emoji: "💃" },
-    { text: "Time is the most valuable coin in your life.", author: "Carl Sandburg", emoji: "⏳" },
-    { text: "Life is a collection of moments. Make each one count.", author: "Unknown", emoji: "✨" }
+    { text: "Every moment is a fresh beginning.", author: "T.S. Eliot", emoji: "" },
+    { text: "Life is not measured by the breaths we take, but by the moments that take our breath away.", author: "Maya Angelou", emoji: "" },
+    { text: "The best things in life are the people we love, the places we've been, and the memories we've made along the way.", author: "Unknown", emoji: "" },
+    { text: "Memories are the key not to the past, but to the future.", author: "Corrie Ten Boom", emoji: "" },
+    { text: "Time is the most valuable coin in your life.", author: "Carl Sandburg", emoji: "" },
+    { text: "Life is a collection of moments. Make each one count.", author: "Unknown", emoji: "" }
   ]
 
   useEffect(() => {
@@ -59,7 +57,7 @@ const Footer: React.FC<FooterProps> = ({ memories }) => {
           </div>
           <div className="footer-divider">
             <p className="footer-copyright">
-              © 2024 TimeStitch. Made with <span role="img" aria-label="love">❤️</span> for preserving precious moments.
+              © 2025 TimeStitch. Made by Aakashsingh Rajput for preserving precious moments.
             </p>
           </div>
         </div>
