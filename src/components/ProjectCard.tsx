@@ -14,6 +14,7 @@ interface Project {
   name: string;
   description: string;
   memoryCount: number;
+  imageCount?: number;
   createdDate: string;
   color: string;
 }
@@ -119,7 +120,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             <div className="text-xs text-gray-600">Memories</div>
           </div>
           <div className={`${colors.bg} rounded-xl p-3 text-center`}>
-            <div className="text-xl font-bold text-gray-900">{Math.floor(Math.random() * 50) + 1}</div>
+            <div className="text-xl font-bold text-gray-900">{project.imageCount || 0}</div>
             <div className="text-xs text-gray-600">Images</div>
           </div>
         </div>

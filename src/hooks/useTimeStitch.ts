@@ -42,6 +42,7 @@ export interface Project {
   name: string;
   description: string;
   memoryCount: number;
+  imageCount?: number;
   createdDate: string;
   color: string;
   collaborators?: string[];
@@ -84,6 +85,7 @@ export const useTimeStitch = () => {
       name: 'Website Redesign',
       description: 'Complete overhaul of our company website with modern design principles and improved user experience',
       memoryCount: 8,
+      imageCount: 33,
       createdDate: 'Jan 15, 2024',
       color: 'blue',
       collaborators: ['user1', 'user2'],
@@ -94,6 +96,7 @@ export const useTimeStitch = () => {
       name: 'Mobile App Launch',
       description: 'Development and launch of our new mobile application for iOS and Android platforms',
       memoryCount: 12,
+      imageCount: 35,
       createdDate: 'Feb 1, 2024',
       color: 'purple',
       collaborators: ['user1'],
@@ -104,6 +107,7 @@ export const useTimeStitch = () => {
       name: 'Team Building Retreat',
       description: 'Annual team building activities and strategic planning sessions in the mountains',
       memoryCount: 25,
+      imageCount: 2,
       createdDate: 'Mar 10, 2024',
       color: 'green',
       collaborators: [],
@@ -114,6 +118,7 @@ export const useTimeStitch = () => {
       name: 'Product Launch',
       description: 'Major product launch event with press coverage and customer demonstrations',
       memoryCount: 15,
+      imageCount: 39,
       createdDate: 'Apr 5, 2024',
       color: 'orange',
       collaborators: ['user2', 'user3'],
