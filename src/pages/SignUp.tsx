@@ -46,18 +46,26 @@ const SignUp = () => {
         setError(error.message);
       } else if (data?.user) {
         // Insert extra profile data into Supabase 'profiles' table
-        const { error: profileError } = await supabase.from('profiles').insert([
-          {
-            id: data.user.id,
-            email: formData.email,
-            first_name: formData.firstName,
-            last_name: formData.lastName
+        try {
+          const { error: profileError } = await supabase.from('profiles').insert([
+            {
+              id: data.user.id,
+              email: formData.email,
+              first_name: formData.firstName,
+              last_name: formData.lastName,
+              created_at: new Date().toISOString()
+            }
+          ]);
+          if (profileError) {
+            console.error('Profile insert error:', profileError);
+            // Don't show error to user if profile insert fails, just log it
+            // The account is still created successfully
           }
-        ]);
-        if (profileError) {
-          setError('Account created, but failed to save profile info.');
+        } catch (profileErr) {
+          console.error('Profile insert exception:', profileErr);
+          // Don't show error to user if profile insert fails
         }
-        setSuccess('Account created! Please check your email to verify your account before logging in.');
+        setSuccess('Account created successfully! Please check your email to verify your account before logging in.');
       } else {
         setError('Unexpected error. Please try again.');
       }
@@ -73,12 +81,23 @@ const SignUp = () => {
     setError(null);
     setSuccess(null);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
-      if (error) setError(error.message);
-      // On success, Supabase will redirect and handle session
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        }
+      });
+      if (error) {
+        setError(error.message);
+        setIsLoading(false);
+      }
+      // Don't set loading to false here as we're redirecting
     } catch (err: any) {
       setError(err.message || 'Google sign up failed.');
-    } finally {
       setIsLoading(false);
     }
   };

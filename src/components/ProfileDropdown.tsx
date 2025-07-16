@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { User, Home, LogOut, HelpCircle, Shield } from 'lucide-react';
+import { User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -41,24 +41,10 @@ export const ProfileDropdown: React.FC = () => {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild className="cursor-pointer hover:bg-gray-50">
-          <Link to="/" className="flex items-center">
-            <Home className="w-4 h-4 mr-2" />
-            <span>Back to Home</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer hover:bg-gray-50">
           <Link to="/profile" className="flex items-center">
             <User className="w-4 h-4 mr-2" />
             <span>View Profile</span>
           </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem className="cursor-pointer hover:bg-gray-50">
-          <Shield className="w-4 h-4 mr-2" />
-          <span>Privacy</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem className="cursor-pointer hover:bg-gray-50">
-          <HelpCircle className="w-4 h-4 mr-2" />
-          <span>Help & Support</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="cursor-pointer hover:bg-red-50 text-red-600" onClick={async () => { await signOut(); navigate('/login'); }}>

@@ -31,7 +31,8 @@ const Login = () => {
         await supabase.auth.signOut();
       } else {
         setSuccess('Login successful! Redirecting...');
-        setTimeout(() => navigate('/'), 1000);
+        // Optimize redirect time
+        setTimeout(() => navigate('/'), 500);
       }
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
@@ -45,12 +46,23 @@ const Login = () => {
     setError(null);
     setSuccess(null);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
-      if (error) setError(error.message);
-      // On success, Supabase will redirect and handle session
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        }
+      });
+      if (error) {
+        setError(error.message);
+        setIsLoading(false);
+      }
+      // Don't set loading to false here as we're redirecting
     } catch (err: any) {
       setError(err.message || 'Google login failed.');
-    } finally {
       setIsLoading(false);
     }
   };
