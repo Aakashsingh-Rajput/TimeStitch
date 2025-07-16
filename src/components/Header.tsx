@@ -4,6 +4,7 @@ import { Search, Heart, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProfileDropdown } from '@/components/ProfileDropdown';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 interface HeaderProps {
   activeTab: string;
@@ -30,6 +31,8 @@ export const Header: React.FC<HeaderProps> = ({
   onAddProject,
   onAddMemory
 }) => {
+  const { user, loading, signOut } = useAuth();
+
   return (
     <header className="bg-white/95 backdrop-blur-xl border-b border-gray-200/80 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6">
@@ -39,7 +42,6 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="flex items-center">
               <span className="text-xl font-bold text-gray-900">TimeStitch</span>
             </div>
-            
             <nav className="hidden md:flex items-center space-x-2">
               {[
                 { id: 'projects', label: 'Projects', icon: '📁' },
@@ -63,21 +65,36 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Right side actions */}
-          <div className="flex items-center space-x-4">
-            {/* Login/Signup buttons - prominently displayed */}
-            <div className="hidden md:flex items-center space-x-2">
-              <Link to="/login">
-                <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
-                  Login
+          <div className="flex items-center space-x-2">
+            {/* Show Login/Signup if not authenticated */}
+            {!loading && !user && (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
+                    Login
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
+            {/* Show ProfileDropdown and Sign Out if authenticated */}
+            {!loading && user && (
+              <>
+                <ProfileDropdown />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-gray-600 hover:text-gray-900"
+                  onClick={signOut}
+                >
+                  Sign Out
                 </Button>
-              </Link>
-              <Link to="/signup">
-                <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white">
-                  Sign Up
-                </Button>
-              </Link>
-            </div>
-
+              </>
+            )}
             {/* Search - compact */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -89,7 +106,6 @@ export const Header: React.FC<HeaderProps> = ({
                 className="pl-10 pr-4 py-2 w-40 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50/80 text-sm"
               />
             </div>
-
             {/* Favorites toggle - only show in gallery */}
             {activeTab === 'gallery' && (
               <Button
@@ -106,7 +122,6 @@ export const Header: React.FC<HeaderProps> = ({
                 Favorites
               </Button>
             )}
-
             {/* Add buttons */}
             <Button 
               onClick={onAddMemory} 
@@ -115,7 +130,6 @@ export const Header: React.FC<HeaderProps> = ({
               <Plus className="w-4 h-4 mr-2" />
               Memory
             </Button>
-
             <Button 
               onClick={onAddProject} 
               className="h-9 px-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl shadow-sm text-sm"
@@ -123,9 +137,6 @@ export const Header: React.FC<HeaderProps> = ({
               <Plus className="w-4 h-4 mr-2" />
               Project
             </Button>
-
-            {/* Profile Dropdown */}
-            <ProfileDropdown />
           </div>
         </div>
       </div>

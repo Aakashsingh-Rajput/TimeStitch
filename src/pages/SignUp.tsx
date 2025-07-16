@@ -3,7 +3,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabaseClient';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -16,6 +18,10 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const { signUp } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -27,12 +33,54 @@ const SignUp = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate signup process
-    setTimeout(() => {
+    setError(null);
+    setSuccess(null);
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.');
       setIsLoading(false);
-      console.log('Signup attempted with:', formData);
-    }, 1000);
+      return;
+    }
+    try {
+      const { data, error } = await signUp(formData.email, formData.password);
+      if (error) {
+        setError(error.message);
+      } else if (data?.user) {
+        // Insert extra profile data into Supabase 'profiles' table
+        const { error: profileError } = await supabase.from('profiles').insert([
+          {
+            id: data.user.id,
+            email: formData.email,
+            first_name: formData.firstName,
+            last_name: formData.lastName
+          }
+        ]);
+        if (profileError) {
+          setError('Account created, but failed to save profile info.');
+        }
+        setSuccess('Account created! Please check your email to verify your account before logging in.');
+      } else {
+        setError('Unexpected error. Please try again.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    setIsLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+      if (error) setError(error.message);
+      // On success, Supabase will redirect and handle session
+    } catch (err: any) {
+      setError(err.message || 'Google sign up failed.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -164,6 +212,13 @@ const SignUp = () => {
               </span>
             </div>
 
+            {error && (
+              <div className="text-red-500 text-sm text-center">{error}</div>
+            )}
+            {success && (
+              <div className="text-green-600 text-sm text-center">{success}</div>
+            )}
+
             <Button
               type="submit"
               disabled={isLoading}
@@ -172,6 +227,17 @@ const SignUp = () => {
               {isLoading ? 'Creating account...' : 'Create Account'}
             </Button>
           </form>
+
+          <div className="mt-4 flex flex-col items-center">
+            <Button
+              type="button"
+              onClick={handleGoogleSignUp}
+              disabled={isLoading}
+              className="w-full h-12 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors mb-2"
+            >
+              {isLoading ? 'Redirecting...' : 'Sign Up with Google'}
+            </Button>
+          </div>
 
           <div className="mt-8 text-center">
             <p className="text-gray-600">

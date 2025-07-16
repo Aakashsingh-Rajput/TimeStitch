@@ -3,24 +3,56 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabaseClient';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const { signIn } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate login process
-    setTimeout(() => {
+    setError(null);
+    setSuccess(null);
+    try {
+      const { data, error } = await signIn(email, password);
+      if (error) {
+        setError(error.message);
+      } else if (data?.user && !data.user.email_confirmed_at) {
+        setError('Please verify your email before logging in.');
+        await supabase.auth.signOut();
+      } else {
+        setSuccess('Login successful! Redirecting...');
+        setTimeout(() => navigate('/'), 1000);
+      }
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred.');
+    } finally {
       setIsLoading(false);
-      // Handle login logic here
-      console.log('Login attempted with:', { email, password });
-    }, 1000);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+      if (error) setError(error.message);
+      // On success, Supabase will redirect and handle session
+    } catch (err: any) {
+      setError(err.message || 'Google login failed.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -84,6 +116,13 @@ const Login = () => {
               </Link>
             </div>
 
+            {error && (
+              <div className="text-red-500 text-sm text-center">{error}</div>
+            )}
+            {success && (
+              <div className="text-green-600 text-sm text-center">{success}</div>
+            )}
+
             <Button
               type="submit"
               disabled={isLoading}
@@ -92,6 +131,17 @@ const Login = () => {
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
+
+          <div className="mt-4 flex flex-col items-center">
+            <Button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={isLoading}
+              className="w-full h-12 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors mb-2"
+            >
+              {isLoading ? 'Redirecting...' : 'Sign In with Google'}
+            </Button>
+          </div>
 
           <div className="mt-8 text-center">
             <p className="text-gray-600">

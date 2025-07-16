@@ -10,9 +10,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 export const ProfileDropdown: React.FC = () => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  if (!user) return null;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -25,11 +29,14 @@ export const ProfileDropdown: React.FC = () => {
           <span>Account</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg">
+      <DropdownMenuContent align="end">
         <DropdownMenuLabel className="font-medium">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium text-gray-900">John Doe</p>
-            <p className="text-xs text-gray-500">john.doe@example.com</p>
+            <p className="text-sm font-medium text-gray-900">{user.user_metadata?.full_name || user.email}</p>
+            <p className="text-xs text-gray-500">{user.email}</p>
+            {!user.email_confirmed_at && (
+              <span className="text-xs text-yellow-600">Email not verified</span>
+            )}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -54,7 +61,7 @@ export const ProfileDropdown: React.FC = () => {
           <span>Help & Support</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="cursor-pointer hover:bg-red-50 text-red-600">
+        <DropdownMenuItem className="cursor-pointer hover:bg-red-50 text-red-600" onClick={async () => { await signOut(); navigate('/login'); }}>
           <LogOut className="w-4 h-4 mr-2" />
           <span>Sign Out</span>
         </DropdownMenuItem>

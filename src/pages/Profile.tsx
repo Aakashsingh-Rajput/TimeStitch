@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Camera, Edit3, Save, X, User, Mail, Phone, MapPin, Calendar } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 interface UserProfile {
   firstName: string;
@@ -16,18 +18,35 @@ interface UserProfile {
 }
 
 const Profile = () => {
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState<UserProfile>({
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
-    location: 'San Francisco, CA',
-    bio: 'Passionate photographer and memory keeper. Love capturing life\'s precious moments.',
-    joinDate: 'January 2024'
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    location: '',
+    bio: '',
+    joinDate: ''
   });
+  const [editProfile, setEditProfile] = useState<UserProfile>(profile);
 
-  const [editProfile, setEditProfile] = useState(profile);
+  React.useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login');
+    } else if (user) {
+      setProfile(prev => ({
+        ...prev,
+        email: user.email || '',
+        // You can fetch and set more user metadata here if stored in Supabase
+      }));
+      setEditProfile(prev => ({
+        ...prev,
+        email: user.email || '',
+      }));
+    }
+  }, [user, loading, navigate]);
 
   const handleSave = () => {
     setProfile(editProfile);
@@ -42,6 +61,14 @@ const Profile = () => {
   const handleChange = (field: keyof UserProfile, value: string) => {
     setEditProfile(prev => ({ ...prev, [field]: value }));
   };
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -63,7 +90,14 @@ const Profile = () => {
                 </button>
               </div>
             </div>
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-4 right-4 flex gap-2">
+              <Button
+                onClick={async () => { await signOut(); navigate('/login'); }}
+                variant="outline"
+                className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30"
+              >
+                Sign Out
+              </Button>
               {!isEditing ? (
                 <Button
                   onClick={() => setIsEditing(true)}
