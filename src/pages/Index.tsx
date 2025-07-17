@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from '@/components/Header';
 import { ProjectCard } from '@/components/ProjectCard';
 import { MemoryCard } from '@/components/MemoryCard';
@@ -17,6 +17,7 @@ import { useBulkOperations } from '@/hooks/useBulkOperations';
 import { useOfflineSupport } from '@/hooks/useOfflineSupport';
 import { useMemorySharing } from '@/hooks/useMemorySharing';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 
 const Index = () => {
   const {
@@ -40,11 +41,7 @@ const Index = () => {
     updateMemory,
     deleteMemory,
     toggleMemoryFavorite,
-    toggleImageFavorite,
-    bulkDeleteMemories,
-    bulkToggleFavorites,
-    bulkMoveToProject,
-    moveMemoryToProject,
+    toggleImageFavorite
   } = useTimeStitch();
 
   const bulkOps = useBulkOperations();
@@ -168,6 +165,118 @@ const Index = () => {
     const matchesFavorites = !showFavorites || memory.isFavorite;
     return matchesSearch && matchesFavorites;
   });
+
+  // Memoized handlers for ProjectCard
+  const memoizedHandleEditProject = useCallback((project: Project) => {
+    setEditingProject(project);
+    setShowEditProject(true);
+  }, []);
+
+  const memoizedDeleteProject = useCallback(async (id: string) => {
+    try {
+      await deleteProject(id);
+      toast({
+        title: 'Project deleted',
+        description: 'The project was deleted successfully.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error?.message || 'Failed to delete project.',
+      });
+    }
+  }, [deleteProject]);
+
+  const memoizedHandleProjectClick = useCallback((project: Project) => {
+    setSelectedProject(project.id);
+    setActiveTab('memories');
+  }, [setActiveTab]);
+
+  const memoizedDeleteMemory = useCallback(async (id: string) => {
+    try {
+      await deleteMemory(id);
+      toast({
+        title: 'Memory deleted',
+        description: 'The memory was deleted successfully.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error?.message || 'Failed to delete memory.',
+      });
+    }
+  }, [deleteMemory]);
+
+  const memoizedAddProject = useCallback(async (project: { name: string; description: string; color: string }) => {
+    try {
+      const result = await addProject(project);
+      toast({
+        title: 'Project created',
+        description: 'The project was created successfully.',
+      });
+      return result;
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error?.message || 'Failed to create project.',
+      });
+      throw error;
+    }
+  }, [addProject]);
+
+  const memoizedUpdateProject = useCallback(async (id: string, updates: Partial<Project>) => {
+    try {
+      const result = await updateProject(id, updates);
+      toast({
+        title: 'Project updated',
+        description: 'The project was updated successfully.',
+      });
+      return result;
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error?.message || 'Failed to update project.',
+      });
+      throw error;
+    }
+  }, [updateProject]);
+
+  const memoizedAddMemory = useCallback(async (memory: any) => {
+    try {
+      // AddMemoryModal expects to call onAdd with a single memory object, but addMemory expects (memoryData, images)
+      // We'll extract images if present, otherwise pass an empty array
+      const { images = [], ...memoryData } = memory;
+      const result = await addMemory(memoryData, images);
+      toast({
+        title: 'Memory created',
+        description: 'The memory was created successfully.',
+      });
+      return result;
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error?.message || 'Failed to create memory.',
+      });
+      throw error;
+    }
+  }, [addMemory]);
+
+  const memoizedUpdateMemory = useCallback(async (id: string, updates: Partial<Memory>) => {
+    try {
+      const result = await updateMemory(id, updates);
+      toast({
+        title: 'Memory updated',
+        description: 'The memory was updated successfully.',
+      });
+      return result;
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error?.message || 'Failed to update memory.',
+      });
+      throw error;
+    }
+  }, [updateMemory]);
 
   return (
     <div className="min-h-screen bg-gray-50" {...dragProps}>
@@ -338,14 +447,14 @@ const Index = () => {
                   return (
                 <ProjectCard
                   key={project.id}
-                      project={{
-                        ...project,
-                        memoryCount: stats.memoryCount,
-                        imageCount: stats.imageCount
-                      }}
-                  onEdit={handleEditProject}
-                  onDelete={deleteProject}
-                  onClick={handleProjectClick}
+                  project={{
+                    ...project,
+                    memoryCount: stats.memoryCount,
+                    imageCount: stats.imageCount
+                  }}
+                  onEdit={memoizedHandleEditProject}
+                  onDelete={memoizedDeleteProject}
+                  onClick={memoizedHandleProjectClick}
                 />
                   );
                 })}
@@ -371,7 +480,7 @@ const Index = () => {
                       key={memory.id}
                       memory={memory}
                       onEdit={handleEditMemory}
-                      onDelete={deleteMemory}
+                      onDelete={memoizedDeleteMemory}
                       onToggleFavorite={toggleMemoryFavorite}
                       onViewDetails={handleViewMemoryDetails}
                       onShare={handleShareMemory}
@@ -466,7 +575,7 @@ const Index = () => {
               <TimelineView
                 memories={filteredMemories}
                 onEdit={handleEditMemory}
-                onDelete={deleteMemory}
+                onDelete={memoizedDeleteMemory}
                 onToggleFavorite={toggleMemoryFavorite}
                 onShare={handleShareMemory}
                 onViewDetails={handleViewMemoryDetails}
@@ -478,7 +587,7 @@ const Index = () => {
                     key={memory.id}
                     memory={memory}
                     onEdit={handleEditMemory}
-                    onDelete={deleteMemory}
+                    onDelete={memoizedDeleteMemory}
                     onToggleFavorite={toggleMemoryFavorite}
                     onViewDetails={handleViewMemoryDetails}
                     onShare={handleShareMemory}
@@ -534,20 +643,20 @@ const Index = () => {
       <AddMemoryModal
         isOpen={showAddMemory}
         onClose={() => setShowAddMemory(false)}
-        onAdd={addMemory}
+        onAdd={memoizedAddMemory}
         projects={projects}
       />
 
       <AddProjectModal
         isOpen={showAddProject}
         onClose={() => setShowAddProject(false)}
-        onAdd={addProject}
+        onAdd={memoizedAddProject}
       />
 
       <EditMemoryModal
         isOpen={showEditMemory}
         onClose={() => setShowEditMemory(false)}
-        onUpdate={updateMemory}
+        onUpdate={memoizedUpdateMemory}
         memory={editingMemory}
         projects={projects}
       />
@@ -555,7 +664,7 @@ const Index = () => {
       <EditProjectModal
         isOpen={showEditProject}
         onClose={() => setShowEditProject(false)}
-        onUpdate={updateProject}
+        onUpdate={memoizedUpdateProject}
         project={editingProject}
       />
 
@@ -564,7 +673,7 @@ const Index = () => {
         onClose={() => setShowMemoryDetails(false)}
         memory={viewingMemory}
         onEdit={handleEditMemory}
-        onDelete={deleteMemory}
+        onDelete={memoizedDeleteMemory}
         onShare={handleShareMemory}
         onToggleFavorite={toggleMemoryFavorite}
       />

@@ -67,7 +67,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   }
   
   try {
-    supabase = createClient(supabaseUrl, supabaseAnonKey);
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
     console.log('✅ Supabase client initialized successfully');
   } catch (error) {
     console.error('❌ Error creating Supabase client:', error);
