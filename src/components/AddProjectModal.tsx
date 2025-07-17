@@ -34,38 +34,41 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedColor, setSelectedColor] = useState('blue');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
+      setIsSubmitting(true);
+      setError(null);
       try {
-        onAdd({
+        await onAdd({
           name: name.trim(),
           description: description.trim(),
           color: selectedColor
         });
-        
         // Reset form
         setName('');
         setDescription('');
         setSelectedColor('blue');
         onClose();
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error creating project:', error);
         let errorMsg = 'Unknown error';
         if (error && typeof error === 'object') {
           if ('message' in error) errorMsg = error.message;
           else errorMsg = JSON.stringify(error);
         }
-        alert(`Failed to create project: ${errorMsg}`);
+        setError(`Failed to create project: ${errorMsg}`);
       } finally {
-        // setIsSubmitting(false); // This line was not in the new_code, so it's removed.
+        setIsSubmitting(false);
       }
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={isSubmitting ? undefined : onClose}>
       <DialogContent className="sm:max-w-md bg-white border border-gray-200 rounded-2xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -122,20 +125,27 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
             </div>
           </div>
 
+          {error && (
+            <div className="text-red-600 text-sm font-medium bg-red-50 border border-red-200 rounded-lg p-2">
+              {error}
+            </div>
+          )}
           <div className="flex gap-3 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               className="flex-1 bg-white border-gray-200 hover:bg-gray-50"
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button
               type="submit"
               className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+              disabled={isSubmitting}
             >
-              Create Project
+              {isSubmitting ? 'Creating...' : 'Create Project'}
             </Button>
           </div>
         </form>

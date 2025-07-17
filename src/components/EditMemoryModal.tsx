@@ -32,6 +32,8 @@ export const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
   const [projectId, setProjectId] = useState('');
   const [tags, setTags] = useState('');
   const [images, setImages] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Default images for demo purposes
   const defaultImages = [
@@ -52,18 +54,31 @@ export const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
     }
   }, [memory]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (memory && title.trim()) {
-      onUpdate(memory.id, {
-        title: title.trim(),
-        description: description.trim(),
-        date,
-        projectId: projectId || undefined,
-        tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
-        images
-      });
-      onClose();
+      setIsSubmitting(true);
+      setError(null);
+      try {
+        await onUpdate(memory.id, {
+          title: title.trim(),
+          description: description.trim(),
+          date,
+          projectId: projectId || undefined,
+          tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
+          images
+        });
+        onClose();
+      } catch (error: any) {
+        let errorMsg = 'Unknown error';
+        if (error && typeof error === 'object') {
+          if ('message' in error) errorMsg = error.message;
+          else errorMsg = JSON.stringify(error);
+        }
+        setError(`Failed to update memory: ${errorMsg}`);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -85,7 +100,7 @@ export const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
   if (!memory) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={isSubmitting ? undefined : onClose}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-white border border-gray-200 rounded-2xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -212,11 +227,16 @@ export const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
             />
           </div>
 
+          {error && (
+            <div className="text-red-600 text-sm font-medium bg-red-50 border border-red-200 rounded-lg p-2">
+              {error}
+            </div>
+          )}
           <div className="flex space-x-3 pt-4 border-t border-gray-200">
-            <Button type="submit" className="flex-1 bg-green-500 hover:bg-green-600 text-white rounded-xl">
-              Update Memory
+            <Button type="submit" className="flex-1 bg-green-500 hover:bg-green-600 text-white rounded-xl" disabled={isSubmitting}>
+              {isSubmitting ? 'Updating...' : 'Update Memory'}
             </Button>
-            <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">
+            <Button type="button" variant="outline" onClick={handleCancel} className="flex-1" disabled={isSubmitting}>
               Cancel
             </Button>
           </div>

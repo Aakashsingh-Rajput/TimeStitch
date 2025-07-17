@@ -33,21 +33,27 @@ export const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
+    const allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'
+    ];
     const validFiles = files.filter(file => {
-      const isValidType = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'].includes(file.type);
+      // Only allow files with a defined type and in the allowed list
+      const isValidType = file.type && allowedTypes.includes(file.type);
       const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB limit
-      
+
       if (!isValidType) {
-        alert(`Invalid file type: ${file.name}. Please select JPEG, PNG, GIF, or WebP files.`);
+        alert(`Invalid file type: ${file.name}. Allowed types: ${allowedTypes.join(', ')}`);
       }
       if (!isValidSize) {
         alert(`File too large: ${file.name}. Maximum size is 10MB.`);
       }
-      
+
       return isValidType && isValidSize;
     });
 
@@ -67,10 +73,11 @@ export const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
     e.preventDefault();
     
     if (!user) {
-      alert('Please sign in to add memories.');
+      setError('Please sign in to add memories.');
       return;
     }
-
+    setIsSubmitting(true);
+    setError(null);
     try {
       setIsUploading(true);
       setUploadProgress(0);
@@ -89,7 +96,7 @@ export const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
       // Create memory with images using DataService
       const newMemory = await DataService.createMemory(memoryData, selectedFiles);
       
-      onAdd(newMemory);
+      await onAdd(newMemory);
       
       // Reset form
       setTitle('');
@@ -100,16 +107,16 @@ export const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
       setSelectedFiles([]);
       setUploadProgress(0);
       onClose();
-    } catch (error) {
-      console.error('Error creating memory:', error);
+    } catch (error: any) {
       let errorMsg = 'Unknown error';
       if (error && typeof error === 'object') {
         if ('message' in error) errorMsg = error.message;
         else errorMsg = JSON.stringify(error);
       }
-      alert(`Failed to create memory: ${errorMsg}`);
+      setError(`Failed to create memory: ${errorMsg}`);
     } finally {
       setIsUploading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -118,7 +125,7 @@ export const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={isSubmitting ? undefined : onClose}>
       <DialogContent className="sm:max-w-[600px] bg-white border border-gray-200 rounded-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -137,7 +144,7 @@ export const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter memory title..."
               required
-              disabled={isUploading}
+              disabled={isUploading || isSubmitting}
             />
           </div>
 
@@ -150,7 +157,7 @@ export const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               placeholder="Tell the story of this memory..."
               required
-              disabled={isUploading}
+              disabled={isUploading || isSubmitting}
             />
           </div>
 
@@ -166,7 +173,7 @@ export const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
-                disabled={isUploading}
+                disabled={isUploading || isSubmitting}
               />
             </div>
 
@@ -176,7 +183,7 @@ export const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                 value={selectedProject}
                 onChange={(e) => setSelectedProject(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                disabled={isUploading}
+                disabled={isUploading || isSubmitting}
               >
                 <option value="">No project</option>
                 {projects.map((project) => (
@@ -201,7 +208,7 @@ export const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                 accept="image/*"
                 onChange={handleFileSelect}
                 className="hidden"
-                disabled={isUploading}
+                disabled={isUploading || isSubmitting}
               />
               
               <Button
@@ -209,7 +216,7 @@ export const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                 variant="outline"
                 onClick={openFileDialog}
                 className="w-full h-12 border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50"
-                disabled={isUploading || selectedFiles.length >= 10}
+                disabled={isUploading || isSubmitting || selectedFiles.length >= 10}
               >
                 <Upload className="w-5 h-5 mr-2" />
                 {selectedFiles.length === 0 ? 'Select Images' : `Add More Images (${selectedFiles.length}/10)`}
@@ -237,7 +244,7 @@ export const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                         type="button"
                         onClick={() => removeFile(index)}
                         className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
-                        disabled={isUploading}
+                        disabled={isUploading || isSubmitting}
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -262,26 +269,31 @@ export const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
               onChange={(e) => setTags(e.target.value)}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="e.g. vacation, family, milestone"
-              disabled={isUploading}
+              disabled={isUploading || isSubmitting}
             />
           </div>
 
+          {error && (
+            <div className="text-red-600 text-sm font-medium bg-red-50 border border-red-200 rounded-lg p-2">
+              {error}
+            </div>
+          )}
           <div className="flex gap-3 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               className="flex-1 bg-white border-gray-200 hover:bg-gray-50"
-              disabled={isUploading}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button
               type="submit"
               className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
-              disabled={isUploading}
+              disabled={isSubmitting}
             >
-              {isUploading ? 'Creating Memory...' : 'Add Memory'}
+              {isSubmitting ? 'Creating...' : 'Create Memory'}
             </Button>
           </div>
         </form>
