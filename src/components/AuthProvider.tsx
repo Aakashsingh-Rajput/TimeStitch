@@ -7,6 +7,7 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
+  signInWithGoogle: () => Promise<any>;
   signOut: () => Promise<any>;
 }
 
@@ -22,6 +23,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = useCallback((email: string, password: string) =>
     supabase.auth.signInWithPassword({ email, password }), []);
+
+  const signInWithGoogle = useCallback(() =>
+    supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    }), []);
 
   const signOut = useCallback(() => supabase.auth.signOut(), []);
 
@@ -59,8 +72,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loading,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut
-  }), [user, loading, signUp, signIn, signOut]);
+  }), [user, loading, signUp, signIn, signInWithGoogle, signOut]);
 
   return (
     <AuthContext.Provider value={contextValue}>

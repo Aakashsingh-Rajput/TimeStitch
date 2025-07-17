@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/lib/supabaseClient';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -14,7 +13,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,16 +21,15 @@ const Login = () => {
     setIsLoading(true);
     setError(null);
     setSuccess(null);
+    
     try {
       const { data, error } = await signIn(email, password);
       if (error) {
         setError(error.message);
       } else if (data?.user && !data.user.email_confirmed_at) {
         setError('Please verify your email before logging in.');
-        await supabase.auth.signOut();
       } else {
         setSuccess('Login successful! Redirecting...');
-        // Optimize redirect time
         setTimeout(() => navigate('/'), 500);
       }
     } catch (err: any) {
@@ -45,17 +43,10 @@ const Login = () => {
     setIsLoading(true);
     setError(null);
     setSuccess(null);
+    
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        }
-      });
+      // Use the useAuth hook for Google login as well
+      const { error } = await signInWithGoogle();
       if (error) {
         setError(error.message);
         setIsLoading(false);

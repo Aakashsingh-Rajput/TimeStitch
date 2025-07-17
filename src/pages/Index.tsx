@@ -330,23 +330,23 @@ const Index = () => {
                   <Folder className="w-4 h-4 mr-2" />
                   New Project
                 </Button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {projects.map((project) => {
                   const stats = getProjectStats(project.id);
                   return (
-                    <ProjectCard
-                      key={project.id}
+                <ProjectCard
+                  key={project.id}
                       project={{
                         ...project,
                         memoryCount: stats.memoryCount,
                         imageCount: stats.imageCount
                       }}
-                      onEdit={handleEditProject}
-                      onDelete={deleteProject}
-                      onClick={handleProjectClick}
-                    />
+                  onEdit={handleEditProject}
+                  onDelete={deleteProject}
+                  onClick={handleProjectClick}
+                />
                   );
                 })}
               </div>
@@ -450,18 +450,18 @@ const Index = () => {
         {/* Memories Tab */}
         {activeTab === 'memories' && (
           <div className="space-y-8">
-            <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              <div className="text-center mb-12">
+                <h1 className="text-4xl font-bold text-gray-900 mb-4">
                 {selectedProject ? selectedProjectData?.name : 'All Memories'}
-              </h1>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                </h1>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                 {selectedProject 
                   ? 'Memories from this project'
                   : 'All your captured moments and experiences'
                 }
-              </p>
-            </div>
-
+                </p>
+              </div>
+            
             {viewMode === 'timeline' ? (
               <TimelineView
                 memories={filteredMemories}

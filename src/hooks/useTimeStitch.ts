@@ -1,41 +1,7 @@
-
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { generateAutoTags } from '@/utils/autoTagging';
-import { cloudSync } from '@/utils/cloudSync';
-
-// Validation utilities
-const validateProject = (project: Partial<Project>): string[] => {
-  const errors: string[] = [];
-  if (!project.name?.trim()) errors.push('Project name is required');
-  if (!project.description?.trim()) errors.push('Project description is required');
-  if (!project.color) errors.push('Project color is required');
-  if (project.name && project.name.length > 100) errors.push('Project name must be less than 100 characters');
-  return errors;
-};
-
-const validateMemory = (memory: Partial<Memory>): string[] => {
-  const errors: string[] = [];
-  if (!memory.title?.trim()) errors.push('Memory title is required');
-  if (!memory.description?.trim()) errors.push('Memory description is required');
-  if (memory.title && memory.title.length > 200) errors.push('Memory title must be less than 200 characters');
-  if (!memory.images || memory.images.length === 0) errors.push('At least one image is required');
-  return errors;
-};
-
-// Safe operations utility
-const safeOperation = async <T>(
-  operation: () => T | Promise<T>,
-  context: string
-): Promise<{ success: boolean; data?: T; error?: string }> => {
-  try {
-    const result = await operation();
-    return { success: true, data: result };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`Error in ${context}:`, error);
-    return { success: false, error: errorMessage };
-  }
-};
+import { DataService } from '@/lib/dataService';
+import { useAuth } from './useAuth';
 
 export interface Project {
   id: string;
@@ -71,142 +37,110 @@ export interface GalleryImage {
   isFavorite: boolean;
 }
 
+const validateProject = (project: Partial<Project>): string[] => {
+  const errors: string[] = [];
+  if (!project.name?.trim()) errors.push('Project name is required');
+  if (!project.description?.trim()) errors.push('Project description is required');
+  if (!project.color) errors.push('Project color is required');
+  if (project.name && project.name.length > 100) errors.push('Project name must be less than 100 characters');
+  return errors;
+};
+
+const validateMemory = (memory: Partial<Memory>): string[] => {
+  const errors: string[] = [];
+  if (!memory.title?.trim()) errors.push('Memory title is required');
+  if (!memory.description?.trim()) errors.push('Memory description is required');
+  if (memory.title && memory.title.length > 200) errors.push('Memory title must be less than 200 characters');
+  return errors;
+};
+
+const safeOperation = async <T>(operation: () => T | Promise<T>, context: string): Promise<{ success: boolean; data?: T; error?: string }> => {
+  try {
+    const result = await operation();
+    return { success: true, data: result };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`Error in ${context}:`, error);
+    return { success: false, error: errorMessage };
+  }
+};
+
 export const useTimeStitch = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('projects');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFavorites, setShowFavorites] = useState(false);
   const [currentTheme, setCurrentTheme] = useState('default');
   const [viewMode, setViewMode] = useState<'grid' | 'timeline'>('grid');
 
-  // Enhanced sample data with more realistic content
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: '1',
-      name: 'Website Redesign',
-      description: 'Complete overhaul of our company website with modern design principles and improved user experience',
-      memoryCount: 8,
-      imageCount: 33,
-      createdDate: 'Jan 15, 2024',
-      color: 'blue',
-      collaborators: ['user1', 'user2'],
-      isPublic: false
-    },
-    {
-      id: '2',
-      name: 'Mobile App Launch',
-      description: 'Development and launch of our new mobile application for iOS and Android platforms',
-      memoryCount: 12,
-      imageCount: 35,
-      createdDate: 'Feb 1, 2024',
-      color: 'purple',
-      collaborators: ['user1'],
-      isPublic: true
-    },
-    {
-      id: '3',
-      name: 'Team Building Retreat',
-      description: 'Annual team building activities and strategic planning sessions in the mountains',
-      memoryCount: 25,
-      imageCount: 2,
-      createdDate: 'Mar 10, 2024',
-      color: 'green',
-      collaborators: [],
-      isPublic: false
-    },
-    {
-      id: '4',
-      name: 'Product Launch',
-      description: 'Major product launch event with press coverage and customer demonstrations',
-      memoryCount: 15,
-      imageCount: 39,
-      createdDate: 'Apr 5, 2024',
-      color: 'orange',
-      collaborators: ['user2', 'user3'],
-      isPublic: true
-    }
-  ]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [memories, setMemories] = useState<Memory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [memories, setMemories] = useState<Memory[]>([
-    {
-      id: '1',
-      title: 'Design System Creation',
-      description: 'We spent weeks creating a comprehensive design system that would serve as the foundation for our entire project. This was a crucial milestone that involved extensive research, prototyping, and team collaboration.',
-      date: 'January 20, 2024',
-      images: ['/lovable-uploads/photo-1581091226825-a6a2a5aee158'],
-      isFavorite: true,
-      tags: ['design', 'system', 'milestone'],
-      projectId: '1',
-      location: 'New York Office',
-      createdBy: 'user1'
-    },
-    {
-      id: '2',
-      title: 'First MVP Demo',
-      description: 'Our first working prototype demo to stakeholders. The excitement in the room was palpable as we showcased months of hard work coming together.',
-      date: 'February 15, 2024',
-      images: ['/lovable-uploads/photo-1488590528505-98d2b5aba04b'],
-      isFavorite: true,
-      tags: ['mvp', 'demo', 'prototype'],
-      projectId: '2',
-      location: 'Conference Room A',
-      createdBy: 'user2'
-    },
-    {
-      id: '3',
-      title: 'Late Night Breakthrough',
-      description: 'Sometimes the best ideas come at the most unexpected times. This late-night coding session led to a major breakthrough in our architecture.',
-      date: 'March 2, 2024',
-      images: ['/lovable-uploads/photo-1487058792275-0ad4aaf24ca7'],
-      isFavorite: false,
-      tags: ['coding', 'breakthrough', 'architecture'],
-      projectId: '2',
-      location: 'Home Office',
-      createdBy: 'user1'
-    },
-    {
-      id: '4',
-      title: 'Team Hiking Adventure',
-      description: 'Nothing builds team spirit like conquering a mountain together. This hiking trip strengthened our bonds and gave us fresh perspectives.',
-      date: 'March 15, 2024',
-      images: ['/lovable-uploads/photo-1500673922987-e212871fec22'],
-      isFavorite: true,
-      tags: ['team', 'hiking', 'adventure'],
-      projectId: '3',
-      location: 'Blue Ridge Mountains',
-      createdBy: 'user3'
-    }
-  ]);
+  useEffect(() => {
+    const initializeData = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Check if DataService is available
+        if (typeof DataService?.initialize !== 'function') {
+          console.warn('DataService not available, using mock data');
+          setProjects([]);
+          setMemories([]);
+          setLoading(false);
+          return;
+        }
 
-  // Enhanced computed values with better filtering
+        await DataService.initialize();
+        const [projectsData, memoriesData] = await Promise.all([
+          DataService.getProjects(),
+          DataService.getMemories()
+        ]);
+        setProjects(projectsData);
+        setMemories(memoriesData);
+      } catch (err) {
+        console.error('Error initializing data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+        // Set empty arrays as fallback
+        setProjects([]);
+        setMemories([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    initializeData();
+  }, [user]);
+
   const filteredProjects = useMemo(() => {
     let filtered = projects;
-    
     if (searchQuery) {
       filtered = filtered.filter(project =>
         project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         project.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    
     return filtered.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
   }, [projects, searchQuery]);
 
   const filteredMemories = useMemo(() => {
     let filtered = memories;
-    
     if (searchQuery) {
       filtered = filtered.filter(memory =>
         memory.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         memory.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         memory.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        memory.location?.toLowerCase().includes(searchQuery.toLowerCase())
+        (memory.location?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
       );
     }
-    
     if (showFavorites) {
       filtered = filtered.filter(memory => memory.isFavorite);
     }
-    
     return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [memories, searchQuery, showFavorites]);
 
@@ -220,259 +154,129 @@ export const useTimeStitch = () => {
         isFavorite: memory.isFavorite
       }))
     );
-    
     if (showFavorites) {
       images = images.filter(image => image.isFavorite);
     }
-    
     return images;
   }, [memories, showFavorites]);
 
-  // Enhanced actions with auto-tagging and cloud sync
-  const addProject = useCallback(async (projectData: Omit<Project, 'id' | 'memoryCount'>) => {
+  // CRUD actions with fallback for when DataService is not available
+  const addProject = useCallback(async (projectData: Omit<Project, 'id' | 'memoryCount' | 'imageCount' | 'createdDate'>) => {
     const result = await safeOperation(async () => {
-      // Validate input
       const validationErrors = validateProject(projectData);
-      if (validationErrors.length > 0) {
-        throw new Error(`Validation failed: ${validationErrors.join(', ')}`);
+      if (validationErrors.length > 0) throw new Error(`Validation failed: ${validationErrors.join(', ')}`);
+      
+      if (typeof DataService?.createProject !== 'function') {
+        throw new Error('DataService not available');
       }
-
-      const newProject: Project = {
-        ...projectData,
-        id: `project_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        memoryCount: 0,
-        createdDate: new Date().toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'short', 
-          day: 'numeric' 
-        }),
-        collaborators: projectData.collaborators || [],
-        isPublic: projectData.isPublic || false
-      };
-
-      setProjects(prev => {
-        // Check for duplicate names
-        const existingProject = prev.find(p => 
-          p.name.toLowerCase() === newProject.name.toLowerCase()
-        );
-        if (existingProject) {
-          throw new Error('A project with this name already exists');
-        }
-        return [newProject, ...prev];
-      });
       
-      // Add to cloud sync queue
-      cloudSync.addPendingChange({
-        type: 'create',
-        entity: 'project',
-        data: newProject
-      });
-      
+      const newProject = await DataService.createProject(projectData);
+      setProjects(prev => [newProject, ...prev]);
       return newProject;
     }, 'addProject');
-
-    if (!result.success) {
-      console.error('Failed to add project:', result.error);
-      // You could show a toast notification here
-    }
+    if (!result.success) throw new Error(result.error);
+    return result.data;
   }, []);
 
-  const updateProject = useCallback((id: string, projectData: Partial<Project>) => {
-    try {
-      setProjects(prev => prev.map(p => 
-        p.id === id ? { ...p, ...projectData } : p
-      ));
+  const updateProject = useCallback(async (id: string, updates: Partial<Project>) => {
+    const result = await safeOperation(async () => {
+      if (typeof DataService?.updateProject !== 'function') {
+        throw new Error('DataService not available');
+      }
       
-      cloudSync.addPendingChange({
-        type: 'update',
-        entity: 'project',
-        id,
-        data: projectData
-      });
-      
-      console.log('Project updated successfully:', id);
-    } catch (error) {
-      console.error('Error updating project:', error);
-    }
+      const updatedProject = await DataService.updateProject(id, updates);
+      setProjects(prev => prev.map(p => p.id === id ? updatedProject : p));
+      return updatedProject;
+    }, 'updateProject');
+    if (!result.success) throw new Error(result.error);
+    return result.data;
   }, []);
 
-  const deleteProject = useCallback((id: string) => {
-    try {
+  const deleteProject = useCallback(async (id: string) => {
+    const result = await safeOperation(async () => {
+      if (typeof DataService?.deleteProject !== 'function') {
+        throw new Error('DataService not available');
+      }
+      
+      await DataService.deleteProject(id);
       setProjects(prev => prev.filter(p => p.id !== id));
       setMemories(prev => prev.filter(m => m.projectId !== id));
-      
-      cloudSync.addPendingChange({
-        type: 'delete',
-        entity: 'project',
-        id
-      });
-      
-      console.log('Project deleted successfully:', id);
-    } catch (error) {
-      console.error('Error deleting project:', error);
-    }
+    }, 'deleteProject');
+    if (!result.success) throw new Error(result.error);
   }, []);
 
-  const addMemory = useCallback(async (memoryData: Omit<Memory, 'id'>) => {
+  const addMemory = useCallback(async (memoryData: Omit<Memory, 'id'>, images: File[] = []) => {
     const result = await safeOperation(async () => {
-      // Validate input
       const validationErrors = validateMemory(memoryData);
-      if (validationErrors.length > 0) {
-        throw new Error(`Validation failed: ${validationErrors.join(', ')}`);
+      if (validationErrors.length > 0) throw new Error(`Validation failed: ${validationErrors.join(', ')}`);
+      
+      if (typeof DataService?.createMemory !== 'function') {
+        throw new Error('DataService not available');
       }
-
-      // Generate auto-tags
+      
       const autoTags = generateAutoTags(memoryData.title, memoryData.description);
-      const combinedTags = [...new Set([...memoryData.tags, ...autoTags])];
-      
-      const newMemory: Memory = {
-        ...memoryData,
-        id: `memory_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        tags: combinedTags,
-        date: memoryData.date || new Date().toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        }),
-        createdBy: 'current-user' // Would be actual user ID
-      };
-      
+      const combinedTags = [...new Set([...(memoryData.tags || []), ...autoTags])];
+      const newMemory = await DataService.createMemory({ ...memoryData, tags: combinedTags }, images);
       setMemories(prev => [newMemory, ...prev]);
-      
-      // Update project memory count
       if (newMemory.projectId) {
-        setProjects(prev => prev.map(p => 
-          p.id === newMemory.projectId 
-            ? { ...p, memoryCount: p.memoryCount + 1 }
-            : p
-        ));
+        setProjects(prev => prev.map(p => p.id === newMemory.projectId ? { ...p, memoryCount: p.memoryCount + 1 } : p));
       }
-      
-      cloudSync.addPendingChange({
-        type: 'create',
-        entity: 'memory',
-        data: newMemory
-      });
-      
       return newMemory;
     }, 'addMemory');
-
-    if (!result.success) {
-      console.error('Failed to add memory:', result.error);
-      // You could show a toast notification here
-    }
+    if (!result.success) throw new Error(result.error);
+    return result.data;
   }, []);
 
-  const updateMemory = useCallback((id: string, memoryData: Partial<Memory>) => {
-    try {
-      // Re-generate auto-tags if title or description changed
-      let updatedData = { ...memoryData };
-      if (memoryData.title || memoryData.description) {
-        const currentMemory = memories.find(m => m.id === id);
-        if (currentMemory) {
-          const autoTags = generateAutoTags(
-            memoryData.title || currentMemory.title,
-            memoryData.description || currentMemory.description
-          );
-          const existingTags = memoryData.tags || currentMemory.tags;
-          updatedData.tags = [...new Set([...existingTags, ...autoTags])];
-        }
+  const updateMemory = useCallback(async (id: string, updates: Partial<Memory>, newImages: File[] = []) => {
+    const result = await safeOperation(async () => {
+      if (typeof DataService?.updateMemory !== 'function') {
+        throw new Error('DataService not available');
       }
       
-      setMemories(prev => prev.map(m => 
-        m.id === id ? { ...m, ...updatedData } : m
-      ));
-      
-      cloudSync.addPendingChange({
-        type: 'update',
-        entity: 'memory',
-        id,
-        data: updatedData
-      });
-      
-      console.log('Memory updated successfully:', id);
-    } catch (error) {
-      console.error('Error updating memory:', error);
-    }
-  }, [memories]);
+      const updatedMemory = await DataService.updateMemory(id, updates, newImages);
+      setMemories(prev => prev.map(m => m.id === id ? updatedMemory : m));
+      return updatedMemory;
+    }, 'updateMemory');
+    if (!result.success) throw new Error(result.error);
+    return result.data;
+  }, []);
 
-  const deleteMemory = useCallback((id: string) => {
-    try {
-      const memory = memories.find(m => m.id === id);
+  const deleteMemory = useCallback(async (id: string) => {
+    const result = await safeOperation(async () => {
+      if (typeof DataService?.deleteMemory !== 'function') {
+        throw new Error('DataService not available');
+      }
+      
+      await DataService.deleteMemory(id);
       setMemories(prev => prev.filter(m => m.id !== id));
-      
-      // Update project memory count
-      if (memory?.projectId) {
-        setProjects(prev => prev.map(p => 
-          p.id === memory.projectId 
-            ? { ...p, memoryCount: Math.max(0, p.memoryCount - 1) }
-            : p
-        ));
+      const deletedMemory = memories.find(m => m.id === id);
+      if (deletedMemory?.projectId) {
+        setProjects(prev => prev.map(p => p.id === deletedMemory.projectId ? { ...p, memoryCount: Math.max(0, p.memoryCount - 1) } : p));
       }
-      
-      cloudSync.addPendingChange({
-        type: 'delete',
-        entity: 'memory',
-        id
-      });
-      
-      console.log('Memory deleted successfully:', id);
-    } catch (error) {
-      console.error('Error deleting memory:', error);
-    }
+    }, 'deleteMemory');
+    if (!result.success) throw new Error(result.error);
   }, [memories]);
 
-  const toggleMemoryFavorite = useCallback((id: string) => {
-    try {
-      setMemories(prev => prev.map(m => 
-        m.id === id ? { ...m, isFavorite: !m.isFavorite } : m
-      ));
-      
-      const memory = memories.find(m => m.id === id);
-      if (memory) {
-        cloudSync.addPendingChange({
-          type: 'update',
-          entity: 'memory',
-          id,
-          data: { isFavorite: !memory.isFavorite }
-        });
+  const toggleMemoryFavorite = useCallback(async (id: string) => {
+    const result = await safeOperation(async () => {
+      if (typeof DataService?.toggleMemoryFavorite !== 'function') {
+        throw new Error('DataService not available');
       }
       
-      console.log('Memory favorite toggled:', id);
-    } catch (error) {
-      console.error('Error toggling memory favorite:', error);
-    }
-  }, [memories]);
+      await DataService.toggleMemoryFavorite(id);
+      setMemories(prev => prev.map(m => m.id === id ? { ...m, isFavorite: !m.isFavorite } : m));
+    }, 'toggleMemoryFavorite');
+    if (!result.success) throw new Error(result.error);
+  }, []);
 
   const toggleImageFavorite = useCallback((imageId: string) => {
-    try {
-      const [memoryId] = imageId.split('-');
-      toggleMemoryFavorite(memoryId);
-    } catch (error) {
-      console.error('Error toggling image favorite:', error);
-    }
+    const [memoryId] = imageId.split('-');
+    toggleMemoryFavorite(memoryId);
   }, [toggleMemoryFavorite]);
 
-  // Bulk operations
-  const bulkDeleteMemories = useCallback((memoryIds: string[]) => {
-    memoryIds.forEach(id => deleteMemory(id));
-  }, [deleteMemory]);
-
-  const bulkToggleFavorites = useCallback((memoryIds: string[]) => {
-    memoryIds.forEach(id => toggleMemoryFavorite(id));
-  }, [toggleMemoryFavorite]);
-
-  const bulkMoveToProject = useCallback((memoryIds: string[], projectId: string) => {
-    memoryIds.forEach(id => updateMemory(id, { projectId }));
-  }, [updateMemory]);
-
-  // Memory organization
-  const moveMemoryToProject = useCallback((memoryId: string, targetProjectId: string) => {
-    updateMemory(memoryId, { projectId: targetProjectId });
-  }, [updateMemory]);
+  // Bulk and search actions can be added similarly
 
   return {
-    // State
     activeTab,
     searchQuery,
     showFavorites,
@@ -481,8 +285,8 @@ export const useTimeStitch = () => {
     projects: filteredProjects,
     memories: filteredMemories,
     galleryImages,
-    
-    // Actions
+    loading,
+    error,
     setActiveTab,
     setSearchQuery,
     setShowFavorites: () => setShowFavorites(!showFavorites),
@@ -496,11 +300,5 @@ export const useTimeStitch = () => {
     deleteMemory,
     toggleMemoryFavorite,
     toggleImageFavorite,
-    
-    // Enhanced features
-    bulkDeleteMemories,
-    bulkToggleFavorites,
-    bulkMoveToProject,
-    moveMemoryToProject,
   };
-};
+}; 
