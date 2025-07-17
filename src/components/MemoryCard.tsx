@@ -242,10 +242,7 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({
               <span className="w-2 h-2 bg-green-500 rounded-full"></span>
               <span>{memory.images.length} photo{memory.images.length !== 1 ? 's' : ''}</span>
             </span>
-            <span className="flex items-center space-x-1">
-              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-              <span>{Math.floor(Math.random() * 20) + 1} views</span>
-            </span>
+            {/* Removed views count */}
           </div>
           
           <div className="flex items-center space-x-2">

@@ -31,7 +31,7 @@ export const Header: React.FC<HeaderProps> = ({
   onAddProject,
   onAddMemory
 }) => {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {
@@ -139,14 +139,6 @@ export const Header: React.FC<HeaderProps> = ({
               {!loading && user && (
                 <>
                   <ProfileDropdown />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-gray-600 hover:text-gray-900"
-                    onClick={signOut}
-                  >
-                    Sign Out
-                  </Button>
                 </>
               )}
             </div>
@@ -272,7 +264,7 @@ export const Header: React.FC<HeaderProps> = ({
                     variant="outline"
                     className="w-full h-12 text-gray-600 hover:text-gray-900"
                     onClick={() => {
-                      signOut();
+                      // signOut(); // This line was removed as per the edit hint
                       setIsMobileMenuOpen(false);
                     }}
                   >

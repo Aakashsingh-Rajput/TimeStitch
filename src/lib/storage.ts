@@ -32,24 +32,8 @@ export class StorageService {
 
   // Initialize storage bucket
   static async initializeBucket(): Promise<void> {
-    try {
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const bucketExists = buckets?.some(bucket => bucket.name === this.BUCKET_NAME);
-      
-      if (!bucketExists) {
-        const { error } = await supabase.storage.createBucket(this.BUCKET_NAME, {
-          public: false,
-          allowedMimeTypes: this.ALLOWED_TYPES,
-          fileSizeLimit: this.MAX_FILE_SIZE
-        });
-        
-        if (error) throw error;
-        console.log('Storage bucket created successfully');
-      }
-    } catch (error) {
-      console.error('Error initializing storage bucket:', error);
-      throw error;
-    }
+    // Do nothing! The bucket should be created manually in the dashboard.
+    return;
   }
 
   // Upload image to storage

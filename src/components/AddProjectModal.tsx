@@ -38,17 +38,29 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onAdd({
-        name: name.trim(),
-        description: description.trim(),
-        color: selectedColor
-      });
-      
-      // Reset form
-      setName('');
-      setDescription('');
-      setSelectedColor('blue');
-      onClose();
+      try {
+        onAdd({
+          name: name.trim(),
+          description: description.trim(),
+          color: selectedColor
+        });
+        
+        // Reset form
+        setName('');
+        setDescription('');
+        setSelectedColor('blue');
+        onClose();
+      } catch (error) {
+        console.error('Error creating project:', error);
+        let errorMsg = 'Unknown error';
+        if (error && typeof error === 'object') {
+          if ('message' in error) errorMsg = error.message;
+          else errorMsg = JSON.stringify(error);
+        }
+        alert(`Failed to create project: ${errorMsg}`);
+      } finally {
+        // setIsSubmitting(false); // This line was not in the new_code, so it's removed.
+      }
     }
   };
 

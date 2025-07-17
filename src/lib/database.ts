@@ -43,6 +43,7 @@ export class DatabaseService {
   // Project operations
   static async createProject(project: Omit<Project, 'id' | 'memoryCount' | 'imageCount' | 'createdDate'>): Promise<Project> {
     const { data: user } = await supabase.auth.getUser();
+    console.log('Current user (createProject):', user.user?.id);
     if (!user.user) throw new Error('User not authenticated');
 
     const { data, error } = await supabase
@@ -167,8 +168,10 @@ export class DatabaseService {
   // Memory operations
   static async createMemory(memory: Omit<Memory, 'id'>): Promise<Memory> {
     const { data: user } = await supabase.auth.getUser();
+    console.log('Current user (createMemory):', user.user?.id);
     if (!user.user) throw new Error('User not authenticated');
 
+    console.log('Inserting memory with user_id:', user.user.id);
     const { data, error } = await supabase
       .from('memories')
       .insert({

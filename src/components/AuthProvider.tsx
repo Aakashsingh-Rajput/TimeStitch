@@ -36,7 +36,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
     }), []);
 
-  const signOut = useCallback(() => supabase.auth.signOut(), []);
+  const signOut = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  }, []);
 
   useEffect(() => {
     // Get initial session

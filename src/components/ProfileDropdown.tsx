@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,6 +16,12 @@ import { useAuth } from '@/hooks/useAuth';
 export const ProfileDropdown: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  
+  const handleSignOut = useCallback(async () => {
+    await signOut();
+    navigate('/login');
+  },[signOut, navigate]);
+  
   if (!user) return null;
   return (
     <DropdownMenu>
@@ -47,7 +53,7 @@ export const ProfileDropdown: React.FC = () => {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="cursor-pointer hover:bg-red-50 text-red-600" onClick={async () => { await signOut(); navigate('/login'); }}>
+        <DropdownMenuItem className="cursor-pointer hover:bg-red-50 text-red-600" onClick={handleSignOut}>
           <LogOut className="w-4 h-4 mr-2" />
           <span>Sign Out</span>
         </DropdownMenuItem>
