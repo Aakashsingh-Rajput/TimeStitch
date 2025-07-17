@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
 
 interface Memory {
   id: string;
@@ -59,9 +60,8 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this memory?')) {
-      onDelete(memory.id);
-    }
+    // Remove window.confirm, use AlertDialog instead
+    // onDelete will be called from AlertDialogAction
   };
 
   return (
@@ -184,13 +184,28 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleDelete}
-                  className="hover:bg-red-50/50 text-red-600 cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem className="hover:bg-red-50/50 text-red-600 cursor-pointer">
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Memory?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this memory? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={(e) => { e.stopPropagation(); onDelete(memory.id); }}>
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Heart, Eye, ZoomIn } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface GalleryImage {
   id: string;
@@ -21,6 +22,14 @@ export const Gallery: React.FC<GalleryProps> = ({ images, onToggleFavorite, show
 
   // Filter images based on favorites
   const filteredImages = showFavorites ? images.filter(img => img.isFavorite) : images;
+
+  const handleToggleFavorite = (imageId: string, isFavorite: boolean) => {
+    onToggleFavorite(imageId);
+    toast({
+      title: isFavorite ? 'Removed from favorites' : 'Added to favorites',
+      description: isFavorite ? 'Image removed from your favorites.' : 'Image added to your favorites.',
+    });
+  };
 
   return (
     <div className="space-y-8">
@@ -46,7 +55,7 @@ export const Gallery: React.FC<GalleryProps> = ({ images, onToggleFavorite, show
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onToggleFavorite(image.id);
+                    handleToggleFavorite(image.id, image.isFavorite);
                   }}
                   className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-colors ${
                     image.isFavorite 
