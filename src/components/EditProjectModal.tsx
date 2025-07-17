@@ -26,6 +26,8 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (project) {
@@ -35,14 +37,27 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
     }
   }, [project]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (project && name.trim()) {
-      onUpdate(project.id, {
-        name: name.trim(),
-        description: description.trim()
-      });
-      onClose();
+      setIsSubmitting(true);
+      setError(null);
+      try {
+        await onUpdate(project.id, {
+          name: name.trim(),
+          description: description.trim()
+        });
+        onClose();
+      } catch (error: any) {
+        let errorMsg = 'Unknown error';
+        if (error && typeof error === 'object') {
+          if ('message' in error) errorMsg = error.message;
+          else errorMsg = JSON.stringify(error);
+        }
+        setError(`Failed to update project: ${errorMsg}`);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -53,7 +68,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
   if (!project) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={isSubmitting ? undefined : onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Edit Project</DialogTitle>
@@ -96,11 +111,16 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
             />
           </div>
 
+          {error && (
+            <div className="text-red-600 text-sm font-medium bg-red-50 border border-red-200 rounded-lg p-2">
+              {error}
+            </div>
+          )}
           <div className="flex space-x-3 pt-4">
-            <Button type="submit" className="bg-pink-500 hover:bg-pink-600 text-white">
-              Update Project
+            <Button type="submit" className="bg-pink-500 hover:bg-pink-600 text-white" disabled={isSubmitting}>
+              {isSubmitting ? 'Updating...' : 'Update Project'}
             </Button>
-            <Button type="button" variant="outline" onClick={handleCancel}>
+            <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
               Cancel
             </Button>
           </div>

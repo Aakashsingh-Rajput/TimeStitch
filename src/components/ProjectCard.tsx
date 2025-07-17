@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
 
 interface Project {
   id: string;
@@ -33,6 +34,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   onClick
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const getColorClasses = (color: string) => {
     switch (color) {
@@ -92,12 +94,34 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 <Edit3 className="w-4 h-4 mr-2" />
                 Edit Project
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDelete} className="cursor-pointer text-red-600 hover:bg-red-50">
+              <DropdownMenuItem
+                className="cursor-pointer text-red-600 hover:bg-red-50"
+                onClick={e => {
+                  e.stopPropagation();
+                  setShowDeleteDialog(true);
+                }}
+              >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete Project
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Project?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this project? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={(e) => { e.stopPropagation(); setShowDeleteDialog(false); onDelete(project.id); }}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         <div className="flex items-start space-x-4 mb-4 pr-8">
