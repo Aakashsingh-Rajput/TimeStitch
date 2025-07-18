@@ -51,6 +51,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-2">
               {[
+                { id: 'home', label: 'Home', icon: '🏠' },
                 { id: 'projects', label: 'Projects', icon: '📁' },
                 { id: 'memories', label: 'Memories', icon: '💫' },
                 { id: 'gallery', label: 'Gallery', icon: '🖼️' }
@@ -161,6 +162,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Mobile Navigation */}
             <nav className="flex flex-col space-y-2">
               {[
+                { id: 'home', label: 'Home', icon: '🏠' },
                 { id: 'projects', label: 'Projects', icon: '📁' },
                 { id: 'memories', label: 'Memories', icon: '💫' },
                 { id: 'gallery', label: 'Gallery', icon: '🖼️' }

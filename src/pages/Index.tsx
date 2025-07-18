@@ -10,7 +10,7 @@ import { EditMemoryModal } from '@/components/EditMemoryModal';
 import { EditProjectModal } from '@/components/EditProjectModal';
 import { MemoryDetailsModal } from '@/components/MemoryDetailsModal';
 import { TimelineView } from '@/components/TimelineView';
-import { ArrowLeft, Grid3X3, Clock, Upload, Calendar, Star, Image, Folder, TrendingUp, Users, Clock as ClockIcon } from 'lucide-react';
+import { ArrowLeft, Grid3X3, Clock, Upload, Calendar, Star, Image, Folder, TrendingUp, Users, Clock as ClockIcon, Plus } from 'lucide-react';
 import { useTimeStitch, Memory, Project } from '@/hooks/useTimeStitch';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import { useBulkOperations } from '@/hooks/useBulkOperations';
@@ -366,277 +366,205 @@ const Index = () => {
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* Home Page with Multiple Sections */}
-        {activeTab === 'projects' && !selectedProject && (
-          <div className="space-y-12">
-            {/* Hero Section */}
-            <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                Your Creative Projects
-              </h1>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Organize your memories into meaningful collections and collaborate with others to create beautiful stories
-              </p>
+      {activeTab === 'home' && (
+        <main className="max-w-7xl mx-auto px-6 py-10 space-y-12">
+          {/* Welcome Section */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-blue-700 mb-2 flex items-center justify-center gap-2">
+              <span>🏠</span> Welcome to <span className="text-gray-900">TimeStitch</span>
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Capture and preserve your precious moments forever with rich stories and beautiful imagery.
+            </p>
+          </div>
+
+          {/* Statistics Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 flex flex-col items-center">
+              <Folder className="w-8 h-8 text-blue-500 mb-2" />
+              <p className="text-sm font-medium text-gray-600">Total Projects</p>
+              <p className="text-2xl font-bold text-gray-900">{overallStats.totalProjects}</p>
             </div>
-
-            {/* Statistics Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Projects</p>
-                    <p className="text-2xl font-bold text-gray-900">{overallStats.totalProjects}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Folder className="w-6 h-6 text-blue-600" />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Memories</p>
-                    <p className="text-2xl font-bold text-gray-900">{overallStats.totalMemories}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Star className="w-6 h-6 text-purple-600" />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Images</p>
-                    <p className="text-2xl font-bold text-gray-900">{overallStats.totalImages}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <Image className="w-6 h-6 text-green-600" />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Favorites</p>
-                    <p className="text-2xl font-bold text-gray-900">{overallStats.favoriteMemories}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                    <Star className="w-6 h-6 text-red-600 fill-current" />
-                  </div>
-                </div>
-              </div>
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 flex flex-col items-center">
+              <Star className="w-8 h-8 text-purple-500 mb-2" />
+              <p className="text-sm font-medium text-gray-600">Total Memories</p>
+              <p className="text-2xl font-bold text-gray-900">{overallStats.totalMemories}</p>
             </div>
-
-            {/* Projects Grid */}
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">Your Projects</h2>
-                <Button onClick={handleAddProject} className="bg-blue-500 hover:bg-blue-600">
-                  <Folder className="w-4 h-4 mr-2" />
-                  New Project
-                </Button>
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 flex flex-col items-center">
+              <Image className="w-8 h-8 text-green-500 mb-2" />
+              <p className="text-sm font-medium text-gray-600">Total Images</p>
+              <p className="text-2xl font-bold text-gray-900">{overallStats.totalImages}</p>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {projects.map((project) => {
-                  const stats = getProjectStats(project.id);
-                  return (
-                <ProjectCard
-                  key={project.id}
-                  project={{
-                    ...project,
-                    memoryCount: stats.memoryCount,
-                    imageCount: stats.imageCount
-                  }}
-                  onEdit={memoizedHandleEditProject}
-                  onDelete={memoizedDeleteProject}
-                  onClick={memoizedHandleProjectClick}
-                />
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Recent Memories Section */}
-            {overallStats.recentMemories.length > 0 && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-gray-900">Recent Memories</h2>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setActiveTab('memories')}
-                  >
-                    View All
-                  </Button>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {overallStats.recentMemories.map((memory) => (
-                    <MemoryCard
-                      key={memory.id}
-                      memory={memory}
-                      onEdit={handleEditMemory}
-                      onDelete={memoizedDeleteMemory}
-                      onToggleFavorite={toggleMemoryFavorite}
-                      onViewDetails={handleViewMemoryDetails}
-                      onShare={handleShareMemory}
-                      isSelected={bulkOps.isSelected(memory.id)}
-                      onSelect={() => bulkOps.toggleSelection(memory.id)}
-                      showSelection={bulkOps.isSelectionMode}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Gallery Preview Section */}
-            {galleryImages.length > 0 && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-gray-900">Gallery Preview</h2>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setActiveTab('gallery')}
-                  >
-                    View Gallery
-                  </Button>
-                </div>
-                
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    {galleryImages.slice(0, 12).map((image, index) => (
-                      <div key={index} className="aspect-square rounded-lg overflow-hidden bg-gray-100">
-                        <img 
-                          src={image.url} 
-                          alt={image.title || `Gallery image ${index + 1}`}
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Roadmap Section */}
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900">Project Roadmap</h2>
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Calendar className="w-8 h-8 text-blue-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Plan</h3>
-                    <p className="text-gray-600 text-sm">Create new projects and organize your ideas</p>
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <TrendingUp className="w-8 h-8 text-purple-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Capture</h3>
-                    <p className="text-gray-600 text-sm">Add memories and photos to your projects</p>
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Users className="w-8 h-8 text-green-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Share</h3>
-                    <p className="text-gray-600 text-sm">Collaborate and share your stories with others</p>
-                  </div>
-                </div>
-              </div>
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 flex flex-col items-center">
+              <Star className="w-8 h-8 text-red-500 mb-2" />
+              <p className="text-sm font-medium text-gray-600">Favorites</p>
+              <p className="text-2xl font-bold text-gray-900">{overallStats.favoriteMemories}</p>
             </div>
           </div>
-        )}
 
-        {/* Memories Tab */}
-        {activeTab === 'memories' && (
-          <div className="space-y-8">
-              <div className="text-center mb-12">
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                {selectedProject ? selectedProjectData?.name : 'All Memories'}
-                </h1>
-                <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                {selectedProject 
-                  ? 'Memories from this project'
-                  : 'All your captured moments and experiences'
-                }
-                </p>
-              </div>
-            
-            {viewMode === 'timeline' ? (
-              <TimelineView
-                memories={filteredMemories}
-                onEdit={handleEditMemory}
-                onDelete={memoizedDeleteMemory}
-                onToggleFavorite={toggleMemoryFavorite}
-                onShare={handleShareMemory}
-                onViewDetails={handleViewMemoryDetails}
-              />
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredMemories.map((memory) => (
-                  <MemoryCard
-                    key={memory.id}
-                    memory={memory}
-                    onEdit={handleEditMemory}
-                    onDelete={memoizedDeleteMemory}
-                    onToggleFavorite={toggleMemoryFavorite}
-                    onViewDetails={handleViewMemoryDetails}
-                    onShare={handleShareMemory}
-                    isSelected={bulkOps.isSelected(memory.id)}
-                    onSelect={() => bulkOps.toggleSelection(memory.id)}
-                    showSelection={bulkOps.isSelectionMode}
+          {/* Quick Actions */}
+          <div className="flex flex-wrap justify-center gap-4 mt-8">
+            <Button onClick={handleAddProject} className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2">
+              <Plus className="w-5 h-5" /> New Project
+            </Button>
+            <Button onClick={handleAddMemory} className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2">
+              <Plus className="w-5 h-5" /> New Memory
+            </Button>
+          </div>
+
+          {/* Recent Projects */}
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2"><Folder className="w-6 h-6 text-blue-500" /> Recent Projects</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {projects.slice(0, 3).map((project) => {
+                const stats = getProjectStats(project.id);
+                return (
+                  <ProjectCard
+                    key={project.id}
+                    project={{
+                      ...project,
+                      memoryCount: stats.memoryCount,
+                      imageCount: stats.imageCount
+                    }}
+                    onEdit={memoizedHandleEditProject}
+                    onDelete={memoizedDeleteProject}
+                    onClick={memoizedHandleProjectClick}
                   />
-                ))}
-              </div>
-            )}
-
-            {filteredMemories.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-gray-400 text-6xl mb-4">📝</div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">No memories yet</h3>
-                <p className="text-gray-500 mb-6">
-                  {selectedProject ? 'This project doesn\'t have any memories yet.' : 'Start capturing your precious moments!'}
-                </p>
-                <button
-                  onClick={handleAddMemory}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-medium transition-colors"
-                >
-                  Add Your First Memory
-                </button>
-              </div>
-            )}
+                );
+              })}
+              {projects.length === 0 && (
+                <div className="col-span-full text-center text-gray-500">No projects yet.</div>
+              )}
+            </div>
           </div>
-        )}
 
-        {/* Gallery Tab */}
-        {activeTab === 'gallery' && (
-          <div className="space-y-8">
+          {/* Recent Memories */}
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2"><Star className="w-6 h-6 text-purple-500" /> Recent Memories</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {overallStats.recentMemories.map((memory) => (
+                <MemoryCard
+                  key={memory.id}
+                  memory={memory}
+                  onEdit={handleEditMemory}
+                  onDelete={memoizedDeleteMemory}
+                  onToggleFavorite={toggleMemoryFavorite}
+                  onViewDetails={handleViewMemoryDetails}
+                  onShare={handleShareMemory}
+                  isSelected={bulkOps.isSelected(memory.id)}
+                  onSelect={() => bulkOps.toggleSelection(memory.id)}
+                  showSelection={bulkOps.isSelectionMode}
+                />
+              ))}
+              {overallStats.recentMemories.length === 0 && (
+                <div className="col-span-full text-center text-gray-500">No memories yet.</div>
+              )}
+            </div>
+          </div>
+
+          {/* Gallery Preview */}
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2"><Image className="w-6 h-6 text-green-500" /> Gallery Preview</h2>
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {galleryImages.slice(0, 12).map((image, index) => (
+                  <div key={index} className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+                    <img 
+                      src={image.url} 
+                      alt={image.title || `Gallery image ${index + 1}`}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                    />
+                  </div>
+                ))}
+                {galleryImages.length === 0 && (
+                  <div className="col-span-full text-center text-gray-500">No images yet.</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </main>
+      )}
+
+      {/* Memories Tab */}
+      {activeTab === 'memories' && (
+        <div className="space-y-8">
             <div className="text-center mb-12">
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                Visual Gallery
+              {selectedProject ? selectedProjectData?.name : 'All Memories'}
               </h1>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                All your beautiful moments in one stunning, immersive gallery experience
+              {selectedProject 
+                ? 'Memories from this project'
+                : 'All your captured moments and experiences'
+              }
               </p>
             </div>
-            
-            <Gallery 
-              images={galleryImages}
-              onToggleFavorite={toggleImageFavorite}
-              showFavorites={showFavorites}
+          
+          {viewMode === 'timeline' ? (
+            <TimelineView
+              memories={filteredMemories}
+              onEdit={handleEditMemory}
+              onDelete={memoizedDeleteMemory}
+              onToggleFavorite={toggleMemoryFavorite}
+              onShare={handleShareMemory}
+              onViewDetails={handleViewMemoryDetails}
             />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredMemories.map((memory) => (
+                <MemoryCard
+                  key={memory.id}
+                  memory={memory}
+                  onEdit={handleEditMemory}
+                  onDelete={memoizedDeleteMemory}
+                  onToggleFavorite={toggleMemoryFavorite}
+                  onViewDetails={handleViewMemoryDetails}
+                  onShare={handleShareMemory}
+                  isSelected={bulkOps.isSelected(memory.id)}
+                  onSelect={() => bulkOps.toggleSelection(memory.id)}
+                  showSelection={bulkOps.isSelectionMode}
+                />
+              ))}
+            </div>
+          )}
+
+          {filteredMemories.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-gray-400 text-6xl mb-4">📝</div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">No memories yet</h3>
+              <p className="text-gray-500 mb-6">
+                {selectedProject ? 'This project doesn\'t have any memories yet.' : 'Start capturing your precious moments!'}
+              </p>
+              <button
+                onClick={handleAddMemory}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-medium transition-colors"
+              >
+                Add Your First Memory
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Gallery Tab */}
+      {activeTab === 'gallery' && (
+        <div className="space-y-8">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Visual Gallery
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              All your beautiful moments in one stunning, immersive gallery experience
+            </p>
           </div>
-        )}
-      </main>
+          
+          <Gallery 
+            images={galleryImages}
+            onToggleFavorite={toggleImageFavorite}
+            showFavorites={showFavorites}
+          />
+        </div>
+      )}
 
       <Footer currentTheme={currentTheme} />
 
